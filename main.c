@@ -20,7 +20,7 @@ int main()
     int err;
 
 
-    if (!InitSerialPort())
+    if (InitSerialPort())
     {
         printf("Comport failed to initialize\n");
         return 1;
@@ -33,8 +33,7 @@ int main()
 
     while(1)
     {
-        sendString = ReadUserInput();
-        err = SendSerialString(sendString);
+        err = ReadUserInput();
 
 }
     CloseHandle(hSerial);
@@ -129,7 +128,7 @@ if (dwBytesWrite < n)
     }
 else
 {
-  //  printf("Written to buffer:%s\n",szBuff);
+    printf("Written to buffer:%s\n",szBuff);
 }
     return 0;
 }
@@ -153,7 +152,7 @@ int ReadSerialString() {
 }
 
 
-char* ReadUserInput() {
+int ReadUserInput() {
     char userString[INPUTSIZE];
     int fLen;
     char *passString;
@@ -161,6 +160,7 @@ char* ReadUserInput() {
     char *fNameEnd;
     char *fileName;
     char *fileTxt;
+    int err;
 
     while (1)
     {
@@ -178,41 +178,51 @@ char* ReadUserInput() {
         strcat(fileName[fLen + 1], "\0");
         fileTxt = fileGet(fileName);
         passString = (char *)calloc(strlen(fileTxt)+strlen(fileName)+8,sizeof(char)); //7 is for STORE 2x\n and null end char
-        strcpy(passString,"STORE\n");
-        strcat(passString,fileName);
-        strcat(passString,"\n");
-        strcat(passString,fileTxt);
-        printf("%s\n", fileTxt);
+        strcpy(passString,"STORE");
+        err = SendSerialString(passString);
+        err = SendSerialETX();
+        err = SendSerialString(fileName);
+        err = SendSerialETX();
+        err = SendSerialString(fileTxt);
+        err = SendSerialETX();
+       // printf("%s\n", fileTxt);
 
-        return passString;
+        return err;
     }
 
     if (strstr(userString, "DIR") != NULL) {
         passString = (char *) calloc(5, sizeof(char)); //4 is for DIR\n and null end char
         strcpy(passString, "DIR\n");
-        return passString;
+        err = SendSerialString(passString);
+        err = SendSerialETX();
+        return err;
     }
     if (strstr(userString, "MEM") != NULL) {
         passString = (char *) calloc(5, sizeof(char)); //4 is for MEM\n and null end char
-        strcpy(passString, "MEM\n");
-        return passString;
+        err = SendSerialString(passString);
+        err = SendSerialETX();
+        return err;
     }
     if (strstr(userString, "DELETE") != NULL) {
         passString = (char *) calloc(10, sizeof(char)); //10 is for DELETE_#\n and null end char
         strncpy(passString, userString, 8);
-        strcat(passString, "\n");
-        return passString;
+        err = SendSerialString(passString);
+        err = SendSerialETX();
+        return err;
     }
     if (strstr(userString, "READ") != NULL) {
         passString = (char *) calloc(8, sizeof(char)); //8 is for READ_#\n and null end char
         strncpy(passString, userString, 6);
-        strcat(passString, "\n");
-        return passString;
+        err = SendSerialString(passString);
+        err = SendSerialETX();
+        return err;
     }
     if (strstr(userString, "CLEAR") != NULL) {
         passString = (char *) calloc(7, sizeof(char)); //4 is for CLEAR\n and null end char
         strcpy(passString, "CLEAR\n");
-        return passString;
+        err = SendSerialString(passString);
+        err = SendSerialETX();
+        return err;
     }
 
 
@@ -269,15 +279,29 @@ char* fileGet(char* fileName)
     strncpy(txtStr,string,txtLen);
     strcat(txtStr,"\000");
     return txtStr;
-    }
-int nDigits (int number)
+}
+
+int SendSerialETX(void)
 {
-    int n;
-    int count = 0;
-    while (n != 0)
-    {
-        n/=10;
-        ++count;
+    int n = 2;
+    char szBuff[2];
+    szBuff[0] = 0x03;
+    szBuff[1] = NULL;
+
+    DWORD dwBytesWrite = 0;
+
+    if(!WriteFile(hSerial, szBuff, n, &dwBytesWrite, NULL )) {
+        fprintf(stderr, "Error reading\n");
+        return 1;
+
     }
-    return count;
+    if (dwBytesWrite < n)
+    {
+        return 1;
+    }
+    else
+    {
+          printf("Written to buffer:%s \n",szBuff);
+    }
+    return 0;
 }

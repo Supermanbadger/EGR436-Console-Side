@@ -14,8 +14,9 @@
 //Prototypes
 int InitSerialPort ();
 int SendSerialString(char *inString);
+int SendSerialETX(void);
 int ReadSerialString();
-char* ReadUserInput();
+int ReadUserInput();
 int nDigits (int number);
 void splash();
 char* fileGet(char* fileName);
