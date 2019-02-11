@@ -1,0 +1,33 @@
+int Flash_ParseCommand()
+{
+    Uart.RxRead      
+    
+   if (strstr(Uart.RxRead, "STORE") != NULL)
+   {
+       ret STORE;
+   }
+   else if (strstr(Uart.RxRead, "DIR") != NULL)
+   {
+       ret DIRECTORY;
+   }
+   else if (strstr(Uart.RxRead, "DELETE") != NULL)
+   {
+       ret DELETE;
+   }
+   else if strstr(Uart.RxRead, "MEM") != NULL)
+   {
+        ret MEMORY;
+   }
+   else if (strstr(Uart.RxRead, "READ") != NULL)
+   {
+       ret READ;
+   }
+   else if (strstr(Uart.RxRead, "CLEAR") != NULL) 
+   {
+       ret CLEAR;
+   }
+   else //error case
+   {
+       ret -1;
+   }
+}

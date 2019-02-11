@@ -20,6 +20,8 @@ int ReadUserInput();
 int nDigits (int number);
 void splash();
 char* fileGet(char* fileName);
+int SendSerialETX();
+int SendSerialEOF();
 
 
 #endif //EGR436_LAB1_SERIALCOMMANDS_SUPPORT_H
