@@ -181,10 +181,11 @@ int ReadUserInput() {
         strcpy(passString,"STORE");
         err = SendSerialString(passString);
         err = SendSerialETX();
-        err = SendSerialString(fileName);
-        err = SendSerialETX();
+    //    err = SendSerialString(fileName);
+      //  err = SendSerialETX();
         err = SendSerialString(fileTxt);
         err = SendSerialETX();
+       err = ReadSerialString();
        // printf("%s\n", fileTxt);
 
         return err;
@@ -195,26 +196,38 @@ int ReadUserInput() {
         strcpy(passString, "DIR\n");
         err = SendSerialString(passString);
         err = SendSerialETX();
+        err = ReadSerialString();
         return err;
     }
     if (strstr(userString, "MEM") != NULL) {
         passString = (char *) calloc(5, sizeof(char)); //4 is for MEM\n and null end char
         err = SendSerialString(passString);
         err = SendSerialETX();
+        err = ReadSerialString();
         return err;
     }
     if (strstr(userString, "DELETE") != NULL) {
         passString = (char *) calloc(10, sizeof(char)); //10 is for DELETE_#\n and null end char
-        strncpy(passString, userString, 8);
+        strncpy(passString, userString, 6);
         err = SendSerialString(passString);
         err = SendSerialETX();
+        memset(passString, '\0', sizeof(passString));
+        strncpy(passString, userString+7*sizeof(char), 1);
+        err = SendSerialString(passString);
+        err = SendSerialETX();
+        err = ReadSerialString();
         return err;
     }
     if (strstr(userString, "READ") != NULL) {
         passString = (char *) calloc(8, sizeof(char)); //8 is for READ_#\n and null end char
-        strncpy(passString, userString, 6);
+        strncpy(passString, userString, 4);
         err = SendSerialString(passString);
         err = SendSerialETX();
+        memset(passString, '\0', sizeof(passString));
+        strncpy(passString, userString+5*sizeof(char), 1);
+        err = SendSerialString(passString);
+        err = SendSerialETX();
+        err = ReadSerialString();
         return err;
     }
     if (strstr(userString, "CLEAR") != NULL) {
@@ -222,6 +235,7 @@ int ReadUserInput() {
         strcpy(passString, "CLEAR\n");
         err = SendSerialString(passString);
         err = SendSerialETX();
+        err = ReadSerialString();
         return err;
     }
 
@@ -285,7 +299,7 @@ int SendSerialETX(void)
 {
     int n = 2;
     char szBuff[2];
-    szBuff[0] = 0x03;
+    szBuff[0] = 0x04;
     szBuff[1] = NULL;
 
     DWORD dwBytesWrite = 0;
