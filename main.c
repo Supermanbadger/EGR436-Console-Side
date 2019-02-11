@@ -15,8 +15,6 @@
 
 int main()
 {
-    char inputChar;
-    char* sendString;
     int err;
 
 
@@ -134,8 +132,9 @@ else
 }
 
 int ReadSerialString() {
+
     char szBuff[READBUFF + 1] = {0};
-    char* string;
+    char string[READBUFF+1];
     DWORD dwBytesRead = 0;
     if(!ReadFile(hSerial, szBuff, READBUFF, &dwBytesRead, NULL)){
         printf("Error reading COM string.\n");
@@ -143,9 +142,9 @@ int ReadSerialString() {
     }
     else
     {
-        string = malloc(dwBytesRead);
         strcpy(string,szBuff);
         printf("Recieved:%s\n\n",string);
+
     }
 //error occurred.  Report to user.
 
@@ -178,15 +177,23 @@ int ReadUserInput() {
         strcat(fileName[fLen + 1], "\0");
         fileTxt = fileGet(fileName);
         passString = (char *)calloc(strlen(fileTxt)+strlen(fileName)+8,sizeof(char)); //7 is for STORE 2x\n and null end char
+
         strcpy(passString,"STORE");
         err = SendSerialString(passString);
         err = SendSerialETX();
     //    err = SendSerialString(fileName);
-      //  err = SendSerialETX();
+
+    //  err = SendSerialETX();
         err = SendSerialString(fileTxt);
-        err = SendSerialETX();
-       err = ReadSerialString();
+
+        err = SendSerialEOF();
+        err = ReadSerialString();
        // printf("%s\n", fileTxt);
+
+        free(fileName);
+        free(passString);
+        free(fileTxt);
+
 
         return err;
     }
@@ -196,14 +203,21 @@ int ReadUserInput() {
         strcpy(passString, "DIR\n");
         err = SendSerialString(passString);
         err = SendSerialETX();
+        err = SendSerialEOF();
         err = ReadSerialString();
+
+        free(passString);
         return err;
     }
     if (strstr(userString, "MEM") != NULL) {
         passString = (char *) calloc(5, sizeof(char)); //4 is for MEM\n and null end char
+        strcpy(passString, userString);
         err = SendSerialString(passString);
         err = SendSerialETX();
+        err = SendSerialEOF();
         err = ReadSerialString();
+
+        free(passString);
         return err;
     }
     if (strstr(userString, "DELETE") != NULL) {
@@ -214,8 +228,10 @@ int ReadUserInput() {
         memset(passString, '\0', sizeof(passString));
         strncpy(passString, userString+7*sizeof(char), 1);
         err = SendSerialString(passString);
-        err = SendSerialETX();
+        err = SendSerialEOF();
         err = ReadSerialString();
+
+        free(passString);
         return err;
     }
     if (strstr(userString, "READ") != NULL) {
@@ -226,8 +242,10 @@ int ReadUserInput() {
         memset(passString, '\0', sizeof(passString));
         strncpy(passString, userString+5*sizeof(char), 1);
         err = SendSerialString(passString);
-        err = SendSerialETX();
+        err = SendSerialEOF();
         err = ReadSerialString();
+
+        free(passString);
         return err;
     }
     if (strstr(userString, "CLEAR") != NULL) {
@@ -235,6 +253,7 @@ int ReadUserInput() {
         strcpy(passString, "CLEAR\n");
         err = SendSerialString(passString);
         err = SendSerialETX();
+        err = SendSerialEOF();
         err = ReadSerialString();
         return err;
     }
@@ -250,7 +269,6 @@ char* fileGet(char* fileName)
     FILE *fp;
     char string[MAXFILESIZE];
     char buff[READBUFF];
-    char *txtEnd;
     char *txtStr;
     unsigned int txtLen;
     int eofFlag;
@@ -291,11 +309,38 @@ char* fileGet(char* fileName)
     txtLen =  strlen(string);
     txtStr = (char *) calloc(txtLen+1, sizeof(char));
     strncpy(txtStr,string,txtLen);
-    strcat(txtStr,"\000");
+    strcat(string,"\000");
     return txtStr;
 }
 
+
+
 int SendSerialETX(void)
+{
+    int n = 2;
+    char szBuff[2];
+    szBuff[0] = 0x03;
+    szBuff[1] = NULL;
+
+    DWORD dwBytesWrite = 0;
+
+    if(!WriteFile(hSerial, szBuff, n, &dwBytesWrite, NULL )) {
+        fprintf(stderr, "Error reading\n");
+        return 1;
+
+    }
+    if (dwBytesWrite < n)
+    {
+        return 1;
+    }
+    else
+    {
+        printf("Written to buffer:%s \n",szBuff);
+    }
+    return 0;
+}
+
+int SendSerialEOF(void)
 {
     int n = 2;
     char szBuff[2];
@@ -315,7 +360,8 @@ int SendSerialETX(void)
     }
     else
     {
-          printf("Written to buffer:%s \n",szBuff);
+        printf("Written to buffer:%s \n",szBuff);
     }
     return 0;
 }
+

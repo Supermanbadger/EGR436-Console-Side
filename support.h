@@ -7,7 +7,7 @@
 
 //Macros
 #define COMPORT "COM6"
-#define READBUFF  100
+#define READBUFF  1024
 #define INPUTSIZE 50
 #define MAXFILESIZE 1024
 
@@ -20,6 +20,8 @@ int ReadUserInput();
 int nDigits (int number);
 void splash();
 char* fileGet(char* fileName);
+int SendSerialETX();
+int SendSerialEOF();
 
 
 #endif //EGR436_LAB1_SERIALCOMMANDS_SUPPORT_H
